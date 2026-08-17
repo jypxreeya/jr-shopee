@@ -21,9 +21,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete product error:', error);
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to delete product' }, { status: 500 });
   }
 }
 
@@ -36,27 +36,31 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const { id } = await params;
     const productId = parseInt(id);
+    const data = await request.json();
 
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
     }
 
-    const data = await request.json();
+    const updateData: any = {
+      name: data.name,
+      description: data.description || null,
+      price: parseFloat(data.price),
+      original_price: data.original_price ? parseFloat(data.original_price) : null,
+      discount: data.discount || null,
+      categoryId: parseInt(data.categoryId),
+      merchant: data.merchant,
+      affiliate_url: data.affiliate_url,
+      tags: data.tags || null,
+    };
+
+    if (data.image && data.image !== '[]') {
+      updateData.image = data.image;
+    }
 
     const product = await prisma.product.update({
       where: { id: productId },
-      data: {
-        name: data.name,
-        image: data.image,
-        description: data.description || null,
-        price: parseFloat(data.price),
-        original_price: data.original_price ? parseFloat(data.original_price) : null,
-        discount: data.discount || null,
-        categoryId: parseInt(data.categoryId),
-        merchant: data.merchant,
-        affiliate_url: data.affiliate_url,
-        tags: data.tags || null,
-      }
+      data: updateData,
     });
 
     return NextResponse.json(product);

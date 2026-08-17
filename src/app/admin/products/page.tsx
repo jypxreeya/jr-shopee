@@ -8,7 +8,7 @@ export default function AdminProducts() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editProductId, setEditProductId] = useState<number | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -47,9 +47,9 @@ export default function AdminProducts() {
     e.preventDefault();
     setLoading(true);
 
-    let imageString = formData.image || '[]';
+    let imageString = '[]';
     
-    // Upload images first if exist and new ones are selected
+    // Upload images first if exist
     if (imageFiles.length > 0) {
       const uploadData = new FormData();
       imageFiles.forEach(f => uploadData.append('files', f));
@@ -59,8 +59,6 @@ export default function AdminProducts() {
       });
       if (uploadRes.ok) {
         const { urls, url } = await uploadRes.json();
-        // If we have an existing image and we add new ones, we could merge them,
-        // but for simplicity, let's just replace them if they select new files.
         imageString = JSON.stringify(urls || [url]);
       } else {
         const err = await uploadRes.json().catch(() => ({}));
@@ -70,8 +68,8 @@ export default function AdminProducts() {
       }
     }
 
-    const url = editingId ? `/api/products/${editingId}` : '/api/products';
-    const method = editingId ? 'PATCH' : 'POST';
+    const method = editProductId ? 'PATCH' : 'POST';
+    const url = editProductId ? `/api/products/${editProductId}` : '/api/products';
 
     const res = await fetch(url, {
       method,
@@ -81,7 +79,7 @@ export default function AdminProducts() {
 
     if (res.ok) {
       setShowAddForm(false);
-      setEditingId(null);
+      setEditProductId(null);
       setFormData({
         name: '', description: '', price: '', original_price: '', 
         discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: ''
@@ -90,9 +88,27 @@ export default function AdminProducts() {
       fetchProducts();
     } else {
       const data = await res.json().catch(() => ({}));
-      alert(data.error || 'Failed to add product. Please check your inputs and try again.');
+      alert(data.error || `Failed to ${editProductId ? 'update' : 'add'} product. Please check your inputs and try again.`);
     }
     setLoading(false);
+  };
+
+  const handleEdit = (product: any) => {
+    setFormData({
+      name: product.name || '',
+      description: product.description || '',
+      price: product.price ? product.price.toString() : '',
+      original_price: product.original_price ? product.original_price.toString() : '',
+      discount: product.discount || '',
+      categoryId: product.categoryId ? product.categoryId.toString() : '',
+      merchant: product.merchant || '',
+      affiliate_url: product.affiliate_url || '',
+      tags: product.tags || '',
+    });
+    setEditProductId(product.id);
+    setImageFiles([]);
+    setShowAddForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: number) => {
@@ -105,46 +121,24 @@ export default function AdminProducts() {
     }
   };
 
-  const handleEdit = (product: any) => {
-    setEditingId(product.id);
-    setFormData({
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      original_price: product.original_price || '',
-      discount: product.discount || '',
-      categoryId: product.categoryId,
-      merchant: product.merchant,
-      affiliate_url: product.affiliate_url,
-      tags: product.tags || '',
-      image: product.image,
-    } as any);
-    setShowAddForm(true);
-    window.scrollTo(0, 0);
-  };
-
-  const cancelEdit = () => {
-    setShowAddForm(false);
-    setEditingId(null);
-    setFormData({
-      name: '', description: '', price: '', original_price: '', 
-      discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: ''
-    });
-    setImageFiles([]);
-  };
-
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem' }}>Products</h1>
-        <button className={styles.btnPrimary} onClick={showAddForm ? cancelEdit : () => setShowAddForm(true)}>
+        <button className={styles.btnPrimary} onClick={() => {
+          setShowAddForm(!showAddForm);
+          if (!showAddForm) {
+            setEditProductId(null);
+            setFormData({ name: '', description: '', price: '', original_price: '', discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: '' });
+          }
+        }}>
           {showAddForm ? 'Cancel' : 'Add Product'}
         </button>
       </div>
 
       {showAddForm && (
         <form onSubmit={handleCreate} style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-          <h3>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
+          <h3>{editProductId ? 'Edit Product' : 'Add New Product'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
             <div className={styles.formGroup}>
               <label>Product Name *</label>
@@ -174,9 +168,10 @@ export default function AdminProducts() {
               <input type="url" name="affiliate_url" value={formData.affiliate_url} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
-              <label>Product Images {editingId ? '(Select new files to replace existing images)' : '(Select multiple) *'}</label>
-              <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImageFiles(Array.from(e.target.files))} required={!editingId} />
+              <label>Product Images (Select multiple) *</label>
+              <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImageFiles(Array.from(e.target.files))} {...(!editProductId ? { required: true } : {})} />
               {imageFiles.length > 0 && <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--color-primary-dark)' }}>{imageFiles.length} files selected.</p>}
+              {editProductId && imageFiles.length === 0 && <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: '#6b7280' }}>Leave empty to keep existing images.</p>}
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
               <label>Description</label>
@@ -184,7 +179,7 @@ export default function AdminProducts() {
             </div>
           </div>
           <button type="submit" className={styles.btnPrimary} disabled={loading} style={{ marginTop: '1rem' }}>
-            {loading ? 'Saving...' : editingId ? 'Update Product' : 'Save Product'}
+            {loading ? 'Saving...' : editProductId ? 'Update Product' : 'Save Product'}
           </button>
         </form>
       )}
