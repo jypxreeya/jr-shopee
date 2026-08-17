@@ -47,6 +47,24 @@ export default function AdminCategories() {
     }
   };
 
+  const handleEdit = async (id: number, currentName: string) => {
+    const newName = prompt('Enter new category name:', currentName);
+    if (!newName || newName === currentName) return;
+
+    const res = await fetch(`/api/categories/${id}`, { 
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName })
+    });
+    
+    if (res.ok) {
+      fetchCategories();
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || 'Failed to update category.');
+    }
+  };
+
   return (
     <div>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Categories</h1>
@@ -82,7 +100,10 @@ export default function AdminCategories() {
               <tr key={cat.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <td style={{ padding: '1rem' }}>{cat.name}</td>
                 <td style={{ padding: '1rem' }}>{cat._count?.products || 0}</td>
-                <td style={{ padding: '1rem', textAlign: 'right' }}>
+                <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                  <button onClick={() => handleEdit(cat.id, cat.name)} style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(cat.id)} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
                     Delete
                   </button>
