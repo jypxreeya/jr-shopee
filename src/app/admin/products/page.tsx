@@ -63,6 +63,9 @@ export default function AdminProducts() {
       });
       setImageUrls('');
       fetchProducts();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to add product. Please check your inputs and try again.');
     }
     setLoading(false);
   };

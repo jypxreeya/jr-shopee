@@ -30,6 +30,9 @@ export default function AdminCategories() {
     if (res.ok) {
       setName('');
       fetchCategories();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || 'Failed to add category. Please try again.');
     }
     setLoading(false);
   };
