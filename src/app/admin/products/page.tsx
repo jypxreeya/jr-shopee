@@ -8,6 +8,7 @@ export default function AdminProducts() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,9 +47,9 @@ export default function AdminProducts() {
     e.preventDefault();
     setLoading(true);
 
-    let imageString = '[]';
+    let imageString = formData.image || '[]';
     
-    // Upload images first if exist
+    // Upload images first if exist and new ones are selected
     if (imageFiles.length > 0) {
       const uploadData = new FormData();
       imageFiles.forEach(f => uploadData.append('files', f));
@@ -58,6 +59,8 @@ export default function AdminProducts() {
       });
       if (uploadRes.ok) {
         const { urls, url } = await uploadRes.json();
+        // If we have an existing image and we add new ones, we could merge them,
+        // but for simplicity, let's just replace them if they select new files.
         imageString = JSON.stringify(urls || [url]);
       } else {
         const err = await uploadRes.json().catch(() => ({}));
@@ -67,14 +70,18 @@ export default function AdminProducts() {
       }
     }
 
-    const res = await fetch('/api/products', {
-      method: 'POST',
+    const url = editingId ? `/api/products/${editingId}` : '/api/products';
+    const method = editingId ? 'PATCH' : 'POST';
+
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...formData, image: imageString }),
     });
 
     if (res.ok) {
       setShowAddForm(false);
+      setEditingId(null);
       setFormData({
         name: '', description: '', price: '', original_price: '', 
         discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: ''
@@ -98,18 +105,46 @@ export default function AdminProducts() {
     }
   };
 
+  const handleEdit = (product: any) => {
+    setEditingId(product.id);
+    setFormData({
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      original_price: product.original_price || '',
+      discount: product.discount || '',
+      categoryId: product.categoryId,
+      merchant: product.merchant,
+      affiliate_url: product.affiliate_url,
+      tags: product.tags || '',
+      image: product.image,
+    } as any);
+    setShowAddForm(true);
+    window.scrollTo(0, 0);
+  };
+
+  const cancelEdit = () => {
+    setShowAddForm(false);
+    setEditingId(null);
+    setFormData({
+      name: '', description: '', price: '', original_price: '', 
+      discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: ''
+    });
+    setImageFiles([]);
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem' }}>Products</h1>
-        <button className={styles.btnPrimary} onClick={() => setShowAddForm(!showAddForm)}>
+        <button className={styles.btnPrimary} onClick={showAddForm ? cancelEdit : () => setShowAddForm(true)}>
           {showAddForm ? 'Cancel' : 'Add Product'}
         </button>
       </div>
 
       {showAddForm && (
         <form onSubmit={handleCreate} style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '2rem' }}>
-          <h3>Add New Product</h3>
+          <h3>{editingId ? 'Edit Product' : 'Add New Product'}</h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1.5rem' }}>
             <div className={styles.formGroup}>
               <label>Product Name *</label>
@@ -139,8 +174,8 @@ export default function AdminProducts() {
               <input type="url" name="affiliate_url" value={formData.affiliate_url} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
-              <label>Product Images (Select multiple) *</label>
-              <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImageFiles(Array.from(e.target.files))} required />
+              <label>Product Images {editingId ? '(Select new files to replace existing images)' : '(Select multiple) *'}</label>
+              <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImageFiles(Array.from(e.target.files))} required={!editingId} />
               {imageFiles.length > 0 && <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--color-primary-dark)' }}>{imageFiles.length} files selected.</p>}
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
@@ -149,7 +184,7 @@ export default function AdminProducts() {
             </div>
           </div>
           <button type="submit" className={styles.btnPrimary} disabled={loading} style={{ marginTop: '1rem' }}>
-            {loading ? 'Saving...' : 'Save Product'}
+            {loading ? 'Saving...' : editingId ? 'Update Product' : 'Save Product'}
           </button>
         </form>
       )}
@@ -185,7 +220,10 @@ export default function AdminProducts() {
                 <td style={{ padding: '1rem' }}>{p.price}</td>
                 <td style={{ padding: '1rem' }}>{p.merchant}</td>
                 <td style={{ padding: '1rem' }}>{p.category?.name}</td>
-                <td style={{ padding: '1rem', textAlign: 'right' }}>
+                <td style={{ padding: '1rem', textAlign: 'right', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                  <button onClick={() => handleEdit(p)} style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Edit
+                  </button>
                   <button onClick={() => handleDelete(p.id)} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
                     Delete
                   </button>
