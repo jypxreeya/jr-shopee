@@ -68,7 +68,6 @@ export default function ThreeHero() {
   rotation={[0, 0.1, 0]} 
   polar={[-0.1, 0.2]} 
   azimuth={[-0.2, 0.2]} 
-  config={{ mass: 2, tension: 400 }} 
   snap
 >
           <ElegantShapes />
