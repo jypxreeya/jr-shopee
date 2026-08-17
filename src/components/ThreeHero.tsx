@@ -63,14 +63,14 @@ export default function ThreeHero() {
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 5, 5]} intensity={1} castShadow />
         <Environment preset="city" />
-        <PresentationControls 
-          global 
-          rotation={[0, 0.1, 0]} 
-          polar={[-0.1, 0.2]} 
-          azimuth={[-0.2, 0.2]} 
-          config={{ mass: 2, tension: 400 }} 
-          snap={{ mass: 4, tension: 400 }}
-        >
+       <PresentationControls 
+  global 
+  rotation={[0, 0.1, 0]} 
+  polar={[-0.1, 0.2]} 
+  azimuth={[-0.2, 0.2]} 
+  config={{ mass: 2, tension: 400 }} 
+  snap
+>
           <ElegantShapes />
         </PresentationControls>
         <ContactShadows position={[0, -2, 0]} opacity={0.5} scale={10} blur={2.5} far={4} color="#FFB6C1" />
