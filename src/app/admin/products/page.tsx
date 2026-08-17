@@ -21,7 +21,7 @@ export default function AdminProducts() {
     affiliate_url: '',
     tags: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   const fetchProducts = async () => {
     const res = await fetch('/api/products');
@@ -46,26 +46,26 @@ export default function AdminProducts() {
     e.preventDefault();
     setLoading(true);
 
-    let imageUrl = '';
+    let imageString = '[]';
     
-    // Upload image first if exists
-    if (imageFile) {
+    // Upload images first if exist
+    if (imageFiles.length > 0) {
       const uploadData = new FormData();
-      uploadData.append('file', imageFile);
+      imageFiles.forEach(f => uploadData.append('files', f));
       const uploadRes = await fetch('/api/upload', {
         method: 'POST',
         body: uploadData,
       });
       if (uploadRes.ok) {
-        const { url } = await uploadRes.json();
-        imageUrl = url;
+        const { urls, url } = await uploadRes.json();
+        imageString = JSON.stringify(urls || [url]);
       }
     }
 
     const res = await fetch('/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...formData, image: imageUrl }),
+      body: JSON.stringify({ ...formData, image: imageString }),
     });
 
     if (res.ok) {
@@ -74,7 +74,7 @@ export default function AdminProducts() {
         name: '', description: '', price: '', original_price: '', 
         discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: ''
       });
-      setImageFile(null);
+      setImageFiles([]);
       fetchProducts();
     }
     setLoading(false);
@@ -121,8 +121,9 @@ export default function AdminProducts() {
               <input type="url" name="affiliate_url" value={formData.affiliate_url} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
-              <label>Product Image *</label>
-              <input type="file" accept="image/*" onChange={e => e.target.files && setImageFile(e.target.files[0])} required />
+              <label>Product Images (Select multiple) *</label>
+              <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImageFiles(Array.from(e.target.files))} required />
+              {imageFiles.length > 0 && <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--color-primary-dark)' }}>{imageFiles.length} files selected.</p>}
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
               <label>Description</label>
@@ -150,7 +151,16 @@ export default function AdminProducts() {
             {products.map(p => (
               <tr key={p.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <td style={{ padding: '1rem' }}>
-                  {p.image && <img src={p.image} alt={p.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />}
+                  {(() => {
+                    let thumb = '';
+                    try {
+                      const parsed = JSON.parse(p.image);
+                      thumb = Array.isArray(parsed) ? parsed[0] : p.image;
+                    } catch {
+                      thumb = p.image;
+                    }
+                    return thumb ? <img src={thumb} alt={p.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} /> : null;
+                  })()}
                 </td>
                 <td style={{ padding: '1rem' }}>{p.name}</td>
                 <td style={{ padding: '1rem' }}>₹{p.price}</td>

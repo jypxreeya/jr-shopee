@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
+import ImageGallery from '@/components/ImageGallery';
 import styles from './product.module.css';
 
 export default async function ProductDetail({ params }: { params: { slug: string } }) {
@@ -15,17 +16,21 @@ export default async function ProductDetail({ params }: { params: { slug: string
     notFound();
   }
 
+  let parsedImages: string[] = [];
+  if (product.image) {
+    try {
+      const parsed = JSON.parse(product.image);
+      parsedImages = Array.isArray(parsed) ? parsed : [product.image];
+    } catch {
+      parsedImages = [product.image];
+    }
+  }
+
   return (
     <div className={`container ${styles.productPage}`}>
       <div className={styles.productLayout}>
         <div className={styles.imageColumn}>
-          <div className={styles.imageWrapper}>
-            {product.image ? (
-              <img src={product.image} alt={product.name} className={styles.mainImage} />
-            ) : (
-              <div className={styles.placeholder}>No Image</div>
-            )}
-          </div>
+          <ImageGallery images={parsedImages} alt={product.name} />
         </div>
         
         <div className={styles.infoColumn}>

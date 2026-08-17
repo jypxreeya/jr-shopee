@@ -40,11 +40,20 @@ export default function Home() {
               <div key={product.id} className={styles.productCard}>
                 <Link href={`/product/${product.slug}`} className={styles.productLink}>
                   <div className={styles.imageContainer}>
-                    {product.image ? (
-                      <img src={product.image} alt={product.name} className={styles.productImage} />
-                    ) : (
-                      <div className={styles.placeholderImage}>No Image</div>
-                    )}
+                    {(() => {
+                      let thumb = '';
+                      try {
+                        const parsed = JSON.parse(product.image);
+                        thumb = Array.isArray(parsed) ? parsed[0] : product.image;
+                      } catch {
+                        thumb = product.image;
+                      }
+                      return thumb ? (
+                        <img src={thumb} alt={product.name} className={styles.productImage} />
+                      ) : (
+                        <div className={styles.placeholderImage}>No Image</div>
+                      );
+                    })()}
                   </div>
                   <div className={styles.productInfo}>
                     <p className={styles.categoryLabel}>{product.category?.name || 'Uncategorized'}</p>
