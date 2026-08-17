@@ -80,6 +80,16 @@ export default function AdminProducts() {
     setLoading(false);
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      fetchProducts();
+    } else {
+      alert('Failed to delete product.');
+    }
+  };
+
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -145,6 +155,7 @@ export default function AdminProducts() {
               <th style={{ padding: '1rem' }}>Price</th>
               <th style={{ padding: '1rem' }}>Merchant</th>
               <th style={{ padding: '1rem' }}>Category</th>
+              <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -163,14 +174,19 @@ export default function AdminProducts() {
                   })()}
                 </td>
                 <td style={{ padding: '1rem' }}>{p.name}</td>
-                <td style={{ padding: '1rem' }}>₹{p.price}</td>
+                <td style={{ padding: '1rem' }}>{p.price}</td>
                 <td style={{ padding: '1rem' }}>{p.merchant}</td>
                 <td style={{ padding: '1rem' }}>{p.category?.name}</td>
+                <td style={{ padding: '1rem', textAlign: 'right' }}>
+                  <button onClick={() => handleDelete(p.id)} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
             {products.length === 0 && (
               <tr>
-                <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
                   No products found.
                 </td>
               </tr>

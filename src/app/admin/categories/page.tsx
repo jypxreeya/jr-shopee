@@ -34,6 +34,16 @@ export default function AdminCategories() {
     setLoading(false);
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this category? This will fail if there are products using it.')) return;
+    const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      fetchCategories();
+    } else {
+      alert('Failed to delete. Make sure no products are using this category.');
+    }
+  };
+
   return (
     <div>
       <h1 style={{ fontSize: '2rem', marginBottom: '2rem' }}>Categories</h1>
@@ -61,6 +71,7 @@ export default function AdminCategories() {
             <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>
               <th style={{ padding: '1rem' }}>Name</th>
               <th style={{ padding: '1rem' }}>Products Count</th>
+              <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -68,11 +79,16 @@ export default function AdminCategories() {
               <tr key={cat.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <td style={{ padding: '1rem' }}>{cat.name}</td>
                 <td style={{ padding: '1rem' }}>{cat._count?.products || 0}</td>
+                <td style={{ padding: '1rem', textAlign: 'right' }}>
+                  <button onClick={() => handleDelete(cat.id)} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
             {categories.length === 0 && (
               <tr>
-                <td colSpan={2} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
+                <td colSpan={3} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>
                   No categories found.
                 </td>
               </tr>
