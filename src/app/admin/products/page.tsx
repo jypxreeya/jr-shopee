@@ -21,7 +21,7 @@ export default function AdminProducts() {
     affiliate_url: '',
     tags: '',
   });
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageUrls, setImageUrls] = useState('');
 
   const fetchProducts = async () => {
     const res = await fetch('/api/products');
@@ -46,21 +46,8 @@ export default function AdminProducts() {
     e.preventDefault();
     setLoading(true);
 
-    let imageString = '[]';
-    
-    // Upload images first if exist
-    if (imageFiles.length > 0) {
-      const uploadData = new FormData();
-      imageFiles.forEach(f => uploadData.append('files', f));
-      const uploadRes = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadData,
-      });
-      if (uploadRes.ok) {
-        const { urls, url } = await uploadRes.json();
-        imageString = JSON.stringify(urls || [url]);
-      }
-    }
+    const urlArray = imageUrls.split(',').map(u => u.trim()).filter(u => u.length > 0);
+    const imageString = JSON.stringify(urlArray);
 
     const res = await fetch('/api/products', {
       method: 'POST',
@@ -74,7 +61,7 @@ export default function AdminProducts() {
         name: '', description: '', price: '', original_price: '', 
         discount: '', categoryId: '', merchant: '', affiliate_url: '', tags: ''
       });
-      setImageFiles([]);
+      setImageUrls('');
       fetchProducts();
     }
     setLoading(false);
@@ -131,9 +118,15 @@ export default function AdminProducts() {
               <input type="url" name="affiliate_url" value={formData.affiliate_url} onChange={handleChange} required />
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
-              <label>Product Images (Select multiple) *</label>
-              <input type="file" accept="image/*" multiple onChange={e => e.target.files && setImageFiles(Array.from(e.target.files))} required />
-              {imageFiles.length > 0 && <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: 'var(--color-primary-dark)' }}>{imageFiles.length} files selected.</p>}
+              <label>Product Image URLs (Comma separated) *</label>
+              <textarea 
+                value={imageUrls} 
+                onChange={e => setImageUrls(e.target.value)} 
+                placeholder="https://example.com/img1.jpg, https://example.com/img2.jpg"
+                rows={2} 
+                required 
+              />
+              <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', color: '#6b7280' }}>Paste direct image URLs separated by commas. This is faster and works perfectly with Vercel.</p>
             </div>
             <div className={styles.formGroup} style={{ gridColumn: 'span 2' }}>
               <label>Description</label>
