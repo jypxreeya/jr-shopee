@@ -74,6 +74,13 @@
 
 @media (max-width: 768px) {
   .navLinks {
-    gap: 1.5rem;
+    gap: 1rem;
+  }
+  .logo {
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+  }
+  .navLinks a {
+    font-size: 0.85rem;
   }
 }
