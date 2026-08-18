@@ -126,11 +126,36 @@
 }
 
 @media (max-width: 900px) {
+  .productPage {
+    padding: 6rem 1rem 2rem;
+  }
   .productLayout {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
   }
   .infoColumn {
     padding: 0;
+  }
+  .title {
+    font-size: 1.75rem; /* Much smaller for mobile */
+    margin-bottom: 1rem;
+  }
+  .price {
+    font-size: 1.4rem;
+  }
+  .originalPrice {
+    font-size: 1rem;
+  }
+  .priceContainer {
+    margin-bottom: 1.5rem;
+  }
+  .description {
+    font-size: 0.95rem; /* Smaller text for mobile reading */
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+  }
+  .ctaButton {
+    padding: 1rem;
+    font-size: 1rem;
   }
 }
