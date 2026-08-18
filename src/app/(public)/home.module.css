@@ -178,21 +178,43 @@
 }
 
 @media (max-width: 768px) {
+  .productsSection {
+    padding: 3rem 1rem;
+  }
   .productCard:hover {
     transform: none; /* Disable hover lift on mobile */
   }
   .ctaText {
-    opacity: 1;
-    transform: translateY(0);
+    display: none; /* Hide CTA text on mobile for a cleaner look */
+  }
+  .categoryLabel {
+    display: none; /* Hide category label to save vertical space */
   }
   .productGrid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem 0.75rem;
   }
   .productInfo {
-    padding: 1rem 0;
+    padding: 0.75rem 0.25rem 0.5rem;
+    text-align: left;
   }
   .productName {
+    font-size: 0.85rem;
+    line-height: 1.2;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .productPrice {
+    font-weight: bold;
     font-size: 0.95rem;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
+  }
+  .merchantLabel {
+    font-size: 0.7rem;
+    margin-bottom: 0;
   }
 }

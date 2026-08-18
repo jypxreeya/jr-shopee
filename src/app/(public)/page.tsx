@@ -11,7 +11,7 @@ export default function Home() {
   useEffect(() => {
     fetch('/api/products')
       .then(res => res.json())
-      .then(data => setProducts(data.slice(0, 8))); // Show only latest 8 on homepage
+      .then(data => setProducts(data)); // Show all products on homepage
   }, []);
 
   const scrollToProducts = () => {
